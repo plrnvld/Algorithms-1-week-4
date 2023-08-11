@@ -5,6 +5,8 @@ public class Board {
     private int[][] tiles;
     private int hammingCalculated;
     private int manhattanCalculated;
+    private int zeroRowStored;
+    private int zeroColStored;
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
@@ -13,6 +15,8 @@ public class Board {
 
         hammingCalculated = -1;
         manhattanCalculated = -1;
+        zeroRowStored = -1;
+        zeroColStored = -1;
     }
 
     // string representation of this board
@@ -56,7 +60,7 @@ public class Board {
         for (var y = 0; y < dim; y++)
             for (var x = 0; x < dim; x++)
                 sum += hammingFor(y, x);
-        
+
         hammingCalculated = sum;
         return hammingCalculated;
     }
@@ -68,17 +72,66 @@ public class Board {
         return num == 0 || num == goal ? 0 : 1;
     }
 
+    private boolean canSlideLeft() {
+        return zeroCol() > 0;
+    }
+
+    private boolean canSlideRight() {
+        return zeroCol() < dimension() - 1;
+    }
+
+    private boolean canSlideUp() {
+        return zeroRow() > 0;
+    }
+
+    private boolean canSlideDown() {
+        return zeroRow() < dimension() - 1;
+    }
+
+    private int zeroRow() {
+        if (zeroRowStored >= 0)
+            return zeroRowStored;
+
+        var dim = dimension();
+        for (var y = 0; y < dim; y++)
+            for (var x = 0; x < dim; x++) {
+                if (tiles[y][x] == 0) {
+                    zeroRowStored = y;
+                    zeroColStored = x;
+                }
+            }
+
+        return zeroRowStored;
+    }
+
+    private int zeroCol() {
+        if (zeroColStored >= 0) {
+            return zeroColStored;
+        }
+
+        var dim = dimension();
+        for (var y = 0; y < dim; y++)
+            for (var x = 0; x < dim; x++) {
+                if (tiles[y][x] == 0) {
+                    zeroRowStored = y;
+                    zeroColStored = x;
+                }
+            }
+
+        return zeroColStored;
+    }
+
     // sum of Manhattan distances between tiles and goal
     public int manhattan() {
         if (manhattanCalculated >= 0)
             return manhattanCalculated;
 
-       var dim = dimension();
+        var dim = dimension();
         var sum = 0;
         for (var y = 0; y < dim; y++)
             for (var x = 0; x < dim; x++)
                 sum += manhattanFor(y, x);
-        
+
         manhattanCalculated = sum;
         return manhattanCalculated;
     }
@@ -108,10 +161,10 @@ public class Board {
     public boolean equals(Object other) {
         if (this == other)
             return true;
-        
+
         if (other == null)
             return false;
-        
+
         if (getClass() != other.getClass())
             return false;
 
@@ -134,6 +187,24 @@ public class Board {
     public Iterable<Board> neighbors() {
         var neigbors = new LinkedList<Board>();
 
+        var zeroCol = zeroCol();
+        var zeroRow = zeroRow();
+
+        if (canSlideLeft()) {
+            neigbors.add(exch(zeroRow, zeroCol, zeroRow, zeroCol - 1));
+        }
+
+        if (canSlideRight()) {
+            neigbors.add(exch(zeroRow, zeroCol, zeroRow, zeroCol + 1));
+        }
+
+        if (canSlideUp()) {
+            neigbors.add(exch(zeroRow, zeroCol, zeroRow - 1, zeroCol));
+        }
+
+        if (canSlideDown()) {
+            neigbors.add(exch(zeroRow, zeroCol, zeroRow + 1, zeroCol));
+        }
 
         return neigbors;
     }
@@ -141,7 +212,7 @@ public class Board {
     // a board that is obtained by exchanging any pair of tiles
     public Board twin() {
         var dim = dimension();
-        
+
         if (dim < 2)
             throw new UnsupportedOperationException();
 
@@ -150,7 +221,7 @@ public class Board {
 
     private Board exch(int y1, int x1, int y2, int x2) {
         var dim = dimension();
-        
+
         var newTiles = new int[dim][dim];
 
         for (var y = 0; y < dim; y++) {
@@ -159,17 +230,29 @@ public class Board {
             }
         }
 
-        newTiles[y2][x2] = tiles[y1][x1];
-        newTiles[y1][x1] = tiles[y2][x2];
+        var num1 = tiles[y1][x1];
+        var num2 = tiles[y2][x2];
+        ;
+        newTiles[y2][x2] = num1;
+        newTiles[y1][x1] = num2;
 
         var unchangedHamming = hamming() - hammingFor(y1, x1) - hammingFor(y2, x2);
         var unchangedManhattan = manhattan() - manhattanFor(y1, x1) - manhattanFor(y2, x2);
 
         var newBoard = new Board(newTiles);
 
+        if (num1 == 0) {
+            newBoard.zeroRowStored = y2;
+            newBoard.zeroColStored = x2;
+        } else if (num2 == 0) {
+            newBoard.zeroRowStored = y1;
+            newBoard.zeroColStored = x1;
+        }
+
         newBoard.hammingCalculated = unchangedHamming + newBoard.hammingFor(y1, x1) + newBoard.hammingFor(y2, x2);
-        newBoard.manhattanCalculated = unchangedManhattan + newBoard.manhattanFor(y1, x1) + newBoard.manhattanFor(y2, x2);
-        
+        newBoard.manhattanCalculated = unchangedManhattan + newBoard.manhattanFor(y1, x1)
+                + newBoard.manhattanFor(y2, x2);
+
         return newBoard;
     }
 
@@ -179,8 +262,8 @@ public class Board {
                 { 1, 2, 3, 4, 5 },
                 { 6, 7, 8, 9, 10 },
                 { 11, 12, 13, 14, 15 },
-                { 16, 17, 18, 19, 20 },
-                { 21, 22, 23, 24, 0 },
+                { 16, 17, 18, 19, 0 },
+                { 21, 22, 23, 24, 20 },
         };
 
         var board = new Board(tiles);
@@ -189,10 +272,10 @@ public class Board {
         System.out.println("Hamming: " + board.hamming());
         System.out.println("Manhattan: " + board.manhattan());
 
+        var neigbors = board.neighbors();
 
-        var twin = board.twin();
-        System.out.println(twin.toString());
-        System.out.println("Hamming: " + twin.hamming());
-        System.out.println("Manhattan: " + twin.manhattan());
+        for (var neighbor : neigbors) {
+            System.out.println(neighbor.toString());
+        }
     }
 }

@@ -15,13 +15,6 @@ public class Board {
         manhattanCalculated = -1;
     }
 
-    public Board(int[][] tiles, int hamming, int manhattan) {
-        this.tiles = tiles;
-
-        hammingCalculated = hamming;
-        manhattanCalculated = manhattan;
-    }
-
     // string representation of this board
     public String toString() {
         var dim = dimension();
@@ -147,7 +140,37 @@ public class Board {
 
     // a board that is obtained by exchanging any pair of tiles
     public Board twin() {
-        return null;
+        var dim = dimension();
+        
+        if (dim < 2)
+            throw new UnsupportedOperationException();
+
+        return exch(0, 0, 0, 1);
+    }
+
+    private Board exch(int y1, int x1, int y2, int x2) {
+        var dim = dimension();
+        
+        var newTiles = new int[dim][dim];
+
+        for (var y = 0; y < dim; y++) {
+            for (var x = 0; x < dim; x++) {
+                newTiles[y][x] = tiles[y][x];
+            }
+        }
+
+        newTiles[y2][x2] = tiles[y1][x1];
+        newTiles[y1][x1] = tiles[y2][x2];
+
+        var unchangedHamming = hamming() - hammingFor(y1, x1) - hammingFor(y2, x2);
+        var unchangedManhattan = manhattan() - manhattanFor(y1, x1) - manhattanFor(y2, x2);
+
+        var newBoard = new Board(newTiles);
+
+        newBoard.hammingCalculated = unchangedHamming + newBoard.hammingFor(y1, x1) + newBoard.hammingFor(y2, x2);
+        newBoard.manhattanCalculated = unchangedManhattan + newBoard.manhattanFor(y1, x1) + newBoard.manhattanFor(y2, x2);
+        
+        return newBoard;
     }
 
     // unit testing (not graded)
@@ -156,8 +179,8 @@ public class Board {
                 { 1, 2, 3, 4, 5 },
                 { 6, 7, 8, 9, 10 },
                 { 11, 12, 13, 14, 15 },
-                { 16, 17, 18, 0, 19 },
-                { 21, 22, 23, 24, 20 },
+                { 16, 17, 18, 19, 20 },
+                { 21, 22, 23, 24, 0 },
         };
 
         var board = new Board(tiles);
@@ -165,5 +188,11 @@ public class Board {
         System.out.println(board.toString());
         System.out.println("Hamming: " + board.hamming());
         System.out.println("Manhattan: " + board.manhattan());
+
+
+        var twin = board.twin();
+        System.out.println(twin.toString());
+        System.out.println("Hamming: " + twin.hamming());
+        System.out.println("Manhattan: " + twin.manhattan());
     }
 }

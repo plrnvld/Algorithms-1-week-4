@@ -236,9 +236,6 @@ public class Board {
         newTiles[y2][x2] = num1;
         newTiles[y1][x1] = num2;
 
-        var unchangedHamming = hamming() - hammingFor(y1, x1) - hammingFor(y2, x2);
-        var unchangedManhattan = manhattan() - manhattanFor(y1, x1) - manhattanFor(y2, x2);
-
         var newBoard = new Board(newTiles);
 
         if (num1 == 0) {
@@ -249,9 +246,12 @@ public class Board {
             newBoard.zeroColStored = x1;
         }
 
-        newBoard.hammingCalculated = unchangedHamming + newBoard.hammingFor(y1, x1) + newBoard.hammingFor(y2, x2);
-        newBoard.manhattanCalculated = unchangedManhattan + newBoard.manhattanFor(y1, x1)
-                + newBoard.manhattanFor(y2, x2);
+        newBoard.hammingCalculated = hamming()
+                - hammingFor(y1, x1) - hammingFor(y2, x2)
+                + newBoard.hammingFor(y1, x1) + newBoard.hammingFor(y2, x2);
+        newBoard.manhattanCalculated = manhattan()
+                - manhattanFor(y1, x1) - manhattanFor(y2, x2)
+                + newBoard.manhattanFor(y1, x1) + newBoard.manhattanFor(y2, x2);
 
         return newBoard;
     }
@@ -262,8 +262,8 @@ public class Board {
                 { 1, 2, 3, 4, 5 },
                 { 6, 7, 8, 9, 10 },
                 { 11, 12, 13, 14, 15 },
-                { 16, 17, 18, 19, 0 },
-                { 21, 22, 23, 24, 20 },
+                { 16, 17, 18, 19, 20 },
+                { 21, 22, 23, 24, 0 },
         };
 
         var board = new Board(tiles);

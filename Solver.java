@@ -44,7 +44,7 @@ public class Solver {
                 var prevBoard = bestNode.prev != null ? bestNode.prev.board : null;
                 for (var neighbor : board.neighbors()) {
                     if (!neighbor.equals(prevBoard))
-                        pq.insert(new Node(neighbor, bestNode, bestNode.moves + 1));
+                        pq.insert(new Node(neighbor, bestNode, bestNode.prio - board.manhattan() + 1));
                 }
             }
 
@@ -58,7 +58,7 @@ public class Solver {
                     var prevTwinBoard = bestTwinNode.prev != null ? bestTwinNode.prev.board : null;
                     for (var neighbor : twinBoard.neighbors()) {
                         if (!neighbor.equals(prevTwinBoard))
-                            pqTwin.insert(new Node(neighbor, bestTwinNode, bestTwinNode.moves + 1));
+                            pqTwin.insert(new Node(neighbor, bestTwinNode, bestTwinNode.prio - board.manhattan() + 1));
                     }
                 }
             }
@@ -108,13 +108,11 @@ public class Solver {
         private Board board;
         private Node prev;
         private int prio;
-        private int moves;
-
+        
         Node(Board board, Node prev, int moves) {
             this.board = board;
             this.prev = prev;
-            this.moves = moves;
-
+            
             prio = moves + board.manhattan();
         }
 

@@ -235,7 +235,6 @@ public class Board {
 
         var num1 = tiles[y1][x1];
         var num2 = tiles[y2][x2];
-        ;
         newTiles[y2][x2] = num1;
         newTiles[y1][x1] = num2;
 

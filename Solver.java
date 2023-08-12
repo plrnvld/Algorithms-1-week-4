@@ -6,12 +6,9 @@ import edu.princeton.cs.algs4.Stack;
 import edu.princeton.cs.algs4.StdOut;
 
 public class Solver {
-
-    private Board twin;
     private MinPQ<Node> pq;
     private MinPQ<Node> pqTwin;
     private Solvable solvable;
-
     private Node solutionNode;
 
     private enum Solvable {
@@ -26,13 +23,12 @@ public class Solver {
             throw new IllegalArgumentException();
 
         solvable = Solvable.Undecided;
-        this.twin = initial.twin();
-
+         
         pq = new MinPQ<>();
         pq.insert(new Node(initial, null, 0));
 
         pqTwin = new MinPQ<>();
-        pqTwin.insert(new Node(twin, null, 0));
+        pqTwin.insert(new Node(initial.twin(), null, 0));
 
         while (solvable == Solvable.Undecided) {
             var bestNode = pq.delMin();
@@ -75,15 +71,7 @@ public class Solver {
         if (solvable == Solvable.No)
             return -1;
 
-        var count = 0;
-        var curr = solutionNode;
-
-        while (curr.prev != null) {
-            count++;
-            curr = curr.prev;
-        }
-
-        return count;
+        return solutionNode.prio - solutionNode.board.manhattan();
     }
 
     // sequence of boards in a shortest solution; null if unsolvable

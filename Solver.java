@@ -1,3 +1,5 @@
+import java.io.File;
+
 import edu.princeton.cs.algs4.In;
 import edu.princeton.cs.algs4.MinPQ;
 import edu.princeton.cs.algs4.Stack;
@@ -5,15 +7,14 @@ import edu.princeton.cs.algs4.StdOut;
 
 public class Solver {
 
-    Board initial;
-    Board twin;
-    MinPQ<Node> pq;
-    MinPQ<Node> pqTwin;
-    Solvable solvable;
+    private Board twin;
+    private MinPQ<Node> pq;
+    private MinPQ<Node> pqTwin;
+    private Solvable solvable;
 
-    Node solutionNode;
+    private Node solutionNode;
 
-    enum Solvable {
+    private enum Solvable {
         Undecided,
         Yes,
         No
@@ -25,15 +26,13 @@ public class Solver {
             throw new IllegalArgumentException();
 
         solvable = Solvable.Undecided;
-
-        this.initial = initial;
         this.twin = initial.twin();
 
         pq = new MinPQ<>();
-        pq.insert(new Node(initial, null));
+        pq.insert(new Node(initial, null, 0));
 
         pqTwin = new MinPQ<>();
-        pqTwin.insert(new Node(twin, null));
+        pqTwin.insert(new Node(twin, null, 0));
 
         while (solvable == Solvable.Undecided) {
             var bestNode = pq.delMin();
@@ -42,23 +41,27 @@ public class Solver {
                 solutionNode = bestNode;
                 solvable = Solvable.Yes;
             } else {
+                var prevBoard = bestNode.prev != null ? bestNode.prev.board : null;
                 for (var neighbor : board.neighbors()) {
-                    pq.insert(new Node(neighbor, bestNode));
+                    if (!neighbor.equals(prevBoard))
+                        pq.insert(new Node(neighbor, bestNode, bestNode.moves + 1));
                 }
             }
 
-            // if (solvable == Solvable.Undecided) {
-            //     var bestTwinNode = pqTwin.delMin();
-            //     var twinBoard = bestTwinNode.board;
-            //     if (twinBoard.isGoal()) {
-            //         solutionNode = bestNode;
-            //         solvable = Solvable.No;
-            //     } else {
-            //         for (var neighbor : twinBoard.neighbors()) {
-            //             pqTwin.insert(new Node(neighbor, bestTwinNode));
-            //         }
-            //     }
-            // }
+            if (solvable == Solvable.Undecided) {
+                var bestTwinNode = pqTwin.delMin();
+                var twinBoard = bestTwinNode.board;
+                if (twinBoard.isGoal()) {
+                    solutionNode = bestNode;
+                    solvable = Solvable.No;
+                } else {
+                    var prevTwinBoard = bestTwinNode.prev != null ? bestTwinNode.prev.board : null;
+                    for (var neighbor : twinBoard.neighbors()) {
+                        if (!neighbor.equals(prevTwinBoard))
+                            pqTwin.insert(new Node(neighbor, bestTwinNode, bestTwinNode.moves + 1));
+                    }
+                }
+            }
         }
     }
 
@@ -101,28 +104,22 @@ public class Solver {
         return stack;
     }
 
-    class Node implements Comparable<Node> {
+    private class Node implements Comparable<Node> {
         private Board board;
         private Node prev;
         private int prio;
+        private int moves;
 
-        Node(Board board, Node prev) {
+        Node(Board board, Node prev, int moves) {
             this.board = board;
             this.prev = prev;
+            this.moves = moves;
 
-            prio = board.hamming();
-        }
-
-        Node getPrev() {
-            return prev;
+            prio = moves + board.manhattan();
         }
 
         Board getBoard() {
             return board;
-        }
-
-        int getPrio() {
-            return prio;
         }
 
         @Override
@@ -134,7 +131,11 @@ public class Solver {
     // test client (see below)
     public static void main(String[] args) {
         // create initial board from file
-        In in = new In(args[0]);
+        var defaultFile = "puzzle04.txt";
+
+        In in = args.length > 0
+                ? new In(args[0])
+                : new In(new File(defaultFile));
         int n = in.readInt();
         int[][] tiles = new int[n][n];
         for (int i = 0; i < n; i++)

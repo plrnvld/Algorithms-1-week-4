@@ -216,7 +216,10 @@ public class Board {
         if (dim < 2)
             throw new UnsupportedOperationException();
 
-        return exch(0, 0, 0, 1);
+        if (tiles[0][0] != 0 && tiles[0][1] != 0)
+            return exch(0, 0, 0, 1);
+
+        return exch(1, 0, 1, 1);
     }
 
     private Board exch(int y1, int x1, int y2, int x2) {
